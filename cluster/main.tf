@@ -204,13 +204,50 @@ resource "helm_release" "lb" {
   }
 }
 
-# resource "aws_eks_addon" "ebs-csi" {
-#   cluster_name             = module.eks.cluster_name
-#   addon_name               = "aws-ebs-csi-driver"
-#   addon_version            = "v1.20.0-eksbuild.1"
-#   service_account_role_arn = module.irsa-ebs-csi.iam_role_arn
-#   tags = {
-#     "eks_addon" = "ebs-csi"
-#     "terraform" = "true"
-#   }
-# }
+data "aws_ami" "amzn-linux-2023-ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-2023.*-x86_64"]
+  }
+}
+
+resource "aws_instance" "jenkins_ci" {
+  instance_type = "t3a.medium"
+  ami = data.aws_ami.amzn-linux-2023-ami.id
+  subnet_id = module.vpc.public_subnets[0]
+
+  tags = {
+    Name = "jenkins_ci"
+    Terraform = "true"
+    Environment = "Dev"
+  }  
+}
+
+resource "aws_security_group" "jenkis_ci_sg" {
+  name = "jenkis_ci_sg"
+  vpc_id = module.vpc.default_vpc_id
+
+  ingress {
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port = 8080
+    to_port = 8080
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
