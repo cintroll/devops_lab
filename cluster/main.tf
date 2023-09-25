@@ -25,10 +25,13 @@ module "vpc" {
   name = "education-vpc"
 
   cidr = "10.0.0.0/16"
-  azs  = slice(data.aws_availability_zones.available.names, 0, 3)
+  azs = slice(data.aws_availability_zones.available.names, 0, 2)
+  # azs = slice(data.aws_availability_zones.available.names, 0, 3)
 
-  private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-  public_subnets  = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]
+  private_subnets = ["10.0.1.0/24", "10.0.2.0/24"] 
+  # private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+  public_subnets  = ["10.0.4.0/24", "10.0.5.0/24"]
+  # public_subnets  = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]
 
   enable_nat_gateway   = true
   single_nat_gateway   = true
@@ -47,7 +50,7 @@ module "vpc" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "19.15.3"
+  version = "~> 19.0"
 
   cluster_name    = local.cluster_name
   cluster_version = "1.27"
@@ -56,34 +59,52 @@ module "eks" {
   subnet_ids                     = module.vpc.private_subnets
   cluster_endpoint_public_access = true
 
+  create_kms_key              = false
+  create_cloudwatch_log_group = false
+  cluster_encryption_config   = {}
+
   eks_managed_node_group_defaults = {
     ami_type = "AL2_x86_64"
-
+    instance_types = ["m5a.xlarge", "t3a.medium"]
+    iam_role_additional_policies = {
+      AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+    }
   }
 
   eks_managed_node_groups = {
     one = {
       name = "node-group-1"
 
-      instance_types = ["t3.small"]
-
-      min_size     = 1
-      max_size     = 3
-      desired_size = 2
-    }
-
-    two = {
-      name = "node-group-2"
-
-      instance_types = ["t3.small"]
+      instance_types = ["m5a.xlarge"]
 
       min_size     = 1
       max_size     = 2
       desired_size = 1
+
+      capacity_type  = "SPOT"
+    }
+
+    two = {
+      name = "node-group-1"
+
+      instance_types = ["t3a.medium"]
+
+      min_size     = 1
+      max_size     = 2
+      desired_size = 1
+
+      capacity_type  = "SPOT"
     }
   }
-}
 
+  # aws-auth configmap
+  manage_aws_auth_configmap = true
+
+  tags = {
+    Environment = "dev"
+    Terraform   = "true"
+  }
+}
 
 # https://aws.amazon.com/blogs/containers/amazon-ebs-csi-driver-is-now-generally-available-in-amazon-eks-add-ons/ 
 data "aws_iam_policy" "ebs_csi_policy" {
