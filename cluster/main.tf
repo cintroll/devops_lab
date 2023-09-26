@@ -65,7 +65,7 @@ module "eks" {
 
   eks_managed_node_group_defaults = {
     ami_type = "AL2_x86_64"
-    instance_types = ["m5a.xlarge", "t3a.medium"]
+    instance_types = ["m5a.xlarge", "t3a.small", "t3a.medium"]
     iam_role_additional_policies = {
       AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
     }
@@ -75,7 +75,7 @@ module "eks" {
     one = {
       name = "node-group-1"
 
-      instance_types = ["m5a.xlarge"]
+      instance_types = ["t3a.small"]
 
       min_size     = 1
       max_size     = 2
@@ -87,7 +87,7 @@ module "eks" {
     two = {
       name = "node-group-1"
 
-      instance_types = ["t3a.medium"]
+      instance_types = ["t3a.small"]
 
       min_size     = 1
       max_size     = 2
@@ -303,9 +303,19 @@ resource "kubernetes_cluster_role_binding" "devops_role_binding" {
 }
 
 resource "aws_instance" "jenkins_ci" {
-  instance_type = "t3a.medium"
+  instance_type = "t3a.small"
+
   ami = data.aws_ami.amzn-linux-2023-ami.id
+
   subnet_id = module.vpc.public_subnets[0]
+
+  associate_public_ip_address = true
+
+  iam_instance_profile = aws_iam_instance_profile.devops_instance_profile.name
+
+  vpc_security_group_ids = [ aws_security_group.jenkis_ci_sg.id ]
+  
+  key_name = "cintrollan"
 
   tags = {
     Name = "jenkins_ci"
@@ -316,7 +326,7 @@ resource "aws_instance" "jenkins_ci" {
 
 resource "aws_security_group" "jenkis_ci_sg" {
   name = "jenkis_ci_sg"
-  vpc_id = module.vpc.default_vpc_id
+  vpc_id = module.vpc.vpc_id
 
   ingress {
     from_port = 22
