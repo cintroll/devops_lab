@@ -1,0 +1,83 @@
+---
+- name: Configura Jenkins master
+  hosts: jenkins_master
+  tasks:
+    # Configura o repositorio do jenkins
+    - name: Add Jenkins Repository
+      become: true
+      ansible.builtin.yum_repository:
+        name: jenkins
+        description: Jenkins Repository
+        baseurl: http://pkg.jenkins.io/redhat-stable
+        gpgkey: https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+
+    # Roda upgrade do sistema
+    - name: Upgrade system
+      become: true
+      ansible.builtin.dnf:
+        update_only: true
+
+    # Instala o jenkins
+    - name: Install Jenkins
+      become: true
+      ansible.builtin.yum:
+        pkg:
+          - java-17-amazon-corretto
+          - jenkins
+
+    # Habilita e inicia o serviço
+    - name: Start Jenkins Service
+      become: true
+      ansible.builtin.service:
+        name: jenkins
+        state: started
+        enabled: true
+
+    # Instala o Git
+    - name: Install Git
+      become: true
+      ansible.builtin.yum:
+        name: git
+
+    # Instala o docker
+    - name: Install Docker
+      become: true
+      ansible.builtin.yum:
+        name: docker
+
+    # Adiciona os usuarios ao groupo docker
+    - name: Add docker group to Jenkins
+      become: true
+      ansible.builtin.user:
+        name: jenkins
+        groups: docker
+        append: true
+
+    # Adiciona os usuarios ao groupo docker
+    - name: Add docker group to ec2-user
+      become: true
+      ansible.builtin.user:
+        name: ec2-user
+        groups: docker
+        append: true
+
+    # Habilita e inicia o serviço
+    - name: Start Docker Service
+      become: true
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+    # Le Secret
+    - name: Read Secret
+      become: true
+      ansible.builtin.command:
+        cmd: cat /var/lib/jenkins/secrets/initialAdminPassword
+        creates: /var/lib/jenkins/config_secret
+      register: secret_output
+
+    # Imprime o secret
+    - name: Print Secret
+      ansible.builtin.debug:
+        var: secret_output.stdout_lines

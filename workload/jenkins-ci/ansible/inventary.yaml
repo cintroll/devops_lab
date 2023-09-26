@@ -1,0 +1,10 @@
+---
+jenkins:
+  hosts:
+    jenkins_master:
+      ansible_host: <ec2_dns>
+      ansible_user: ec2-user
+
+ci:
+  children:
+    jenkins:
