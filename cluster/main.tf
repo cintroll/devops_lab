@@ -214,6 +214,94 @@ data "aws_ami" "amzn-linux-2023-ami" {
   }
 }
 
+data "aws_iam_policy_document" "devops_policy" {
+  statement {
+
+    actions = [ "ecr:*",
+                "ecr-public:*",
+                "eks:*", ]
+
+    resources = [ "*" ]
+
+    effect = "Allow"
+  }
+}
+
+resource "aws_iam_role_policy" "devops_policy" {
+  name = "devops_policy"
+
+  policy = "${data.aws_iam_policy_document.devops_policy.json}"
+
+  role = aws_iam_role.devops_role.id
+}
+
+data "aws_iam_policy_document" "devops_trust" {
+  statement {
+    actions = [ "sts:AssumeRole" ]
+
+    principals {
+      type = "Service"
+      identifiers = [ "ec2.amazonaws.com" ]
+    }
+
+    effect = "Allow"
+    
+  }
+}
+
+resource "aws_iam_role" "devops_role" {
+  name = "devops_role"
+  path = "/"
+
+  assume_role_policy = "${data.aws_iam_policy_document.devops_trust.json}"
+}
+
+resource "aws_iam_instance_profile" "devops_instance_profile" {
+  name = "devops_instance_profile"
+
+  role = aws_iam_role.devops_role.name
+}
+
+resource "kubernetes_service_account" "devops_service_account" {
+  metadata {
+    name      = "devops-service-account"
+
+    labels = {
+      "app.kubernetes.io/name" = "devops-service-account"
+    }
+    annotations = {
+      "eks.amazonaws.com/role-arn" = aws_iam_instance_profile.devops_instance_profile.arn
+    }
+  }
+}
+
+resource "kubernetes_cluster_role" "devops_cluster_role" {
+  metadata {
+    name = "devops-cluster-role"
+  }
+ 
+  rule {
+    api_groups = [""]
+    resources  = ["*"]
+    verbs      = ["*"]
+  }
+}
+
+resource "kubernetes_cluster_role_binding" "devops_role_binding" {
+  metadata {
+    name = "devops-role-binding"
+  }
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = "devops-cluster-role"
+  }
+  subject {
+    kind      = "ServiceAccount"
+    name      = "devops-service-account"
+  }
+}
+
 resource "aws_instance" "jenkins_ci" {
   instance_type = "t3a.medium"
   ami = data.aws_ami.amzn-linux-2023-ami.id
