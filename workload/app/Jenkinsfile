@@ -12,6 +12,7 @@ pipeline {
                     echo "${region}"
                     // def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | sed 's/[a-z]\\$//' | sed 's/placement:\\\ //'")
                     def repository  = "${account_id}.dkr.ecr.${region}.amazonaws.com"
+                    echo "${repository}"
 
                     echo 'Logando no ECR'
                     sh "docker login -u AWS -p \$(aws ecr get-login-password --region ${region}) ${repository}"
