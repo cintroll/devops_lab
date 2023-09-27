@@ -7,7 +7,7 @@ pipeline {
                 script {
                     def account_id = sh(returnStdout: true, script: 'aws sts get-caller-identity --query "Account" --output text') 
 
-                    sh 'Logando no ECR'
+                    echo 'Logando no ECR'
                     sh 'aws ecr get-login-password --region region | docker login --username AWS --password-stdin ${account_id}.dkr.ecr.region.amazonaws.com'
                 }
 
