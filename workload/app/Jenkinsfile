@@ -14,8 +14,8 @@ pipeline {
 
             steps {
                 dir('workload/app/Jenkinsfile') {
-                    docker build . -t '${image_name}'
-                    docker push '${image_name}'
+                    sh "docker build . -t '${image_name}'"
+                    sh "docker push '${image_name}'"
                 }                
             }
         }
