@@ -4,23 +4,28 @@ pipeline {
 
         stage('Docker Login') {
             steps {
-                def account_id = sh(returnStdout: true, script: 'aws sts get-caller-identity --query "Account" --output text') 
+                script {
+                    def account_id = sh(returnStdout: true, script: 'aws sts get-caller-identity --query "Account" --output text') 
 
-                sh 'Logando no ECR'
-                sh 'aws ecr get-login-password --region region | docker login --username AWS --password-stdin ${account_id}.dkr.ecr.region.amazonaws.com'
+                    sh 'Logando no ECR'
+                    sh 'aws ecr get-login-password --region region | docker login --username AWS --password-stdin ${account_id}.dkr.ecr.region.amazonaws.com'
+                }
+
             }
         }
 
         stage('Docker Build') {
             steps {
-                def account_id = sh(returnStdout: true, script: 'aws sts get-caller-identity --query "Account" --output text') 
-                def git_hash = sh(returnStdout: true, script: "git rev-parse --short HEAD")
-                def image_name = '${account_id}.dkr.ecr.region.amazonaws.com/devops_repository/app_python:${git_hash}'
+                script {
+                    def account_id = sh(returnStdout: true, script: 'aws sts get-caller-identity --query "Account" --output text') 
+                    def git_hash = sh(returnStdout: true, script: "git rev-parse --short HEAD")
+                    def image_name = '${account_id}.dkr.ecr.region.amazonaws.com/devops_repository/app_python:${git_hash}'
 
-                dir('workload/app/Jenkinsfile') {
-                    sh "docker build . -t '${image_name}'"
-                    sh "docker push '${image_name}'"
-                }                
+                    dir('workload/app/Jenkinsfile') {
+                        sh "docker build . -t '${image_name}'"
+                        sh "docker push '${image_name}'"
+                    }
+                }
             }
         }
     }
