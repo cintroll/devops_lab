@@ -5,7 +5,7 @@ pipeline {
         stage('Docker Login') {
             steps {
                 script {
-                    def account_id = sh(returnStdout: true, script: 'aws sts get-caller-identity --query "Account" --output text' | grep -E '[0-9]+')
+                    def account_id = sh(returnStdout: true, script: 'aws sts get-caller-identity --query "Account" --output text | grep -E \'[0-9]+\'')
                     echo "${account_id}"
                     //def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | grep placement")
                     def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | sed 's/[a-z]\$//' | sed 's/placement:\\ //'")
