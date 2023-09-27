@@ -4,6 +4,7 @@ pipeline {
         stage('Test') {
             steps {
                 sh 'docker ps'
+                sh 'kubectl get pods -n kube-system'
             }
         }
     }
