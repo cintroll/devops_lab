@@ -270,7 +270,7 @@ resource "kubernetes_service_account" "devops_service_account" {
       "app.kubernetes.io/name" = "devops-service-account"
     }
     annotations = {
-      "eks.amazonaws.com/role-arn" = aws_iam_instance_profile.devops_instance_profile.arn
+      "eks.amazonaws.com/role-arn" = aws_iam_role.devops_role.arn
     }
   }
 }
@@ -300,6 +300,18 @@ resource "kubernetes_cluster_role_binding" "devops_role_binding" {
     kind      = "ServiceAccount"
     name      = "devops-service-account"
   }
+}
+
+resource "kubernetes_secret" "devops_service_secret" {
+  metadata {
+    name = "devops-service-secret"
+    
+    annotations = {
+      "kubernetes.io/service-account.name" = "devops-service-account"
+    }
+  }
+
+  type = "kubernetes.io/service-account-token"
 }
 
 resource "aws_instance" "jenkins_ci" {
@@ -348,4 +360,13 @@ resource "aws_security_group" "jenkis_ci_sg" {
     protocol = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+resource "aws_security_group_rule" "jenkins_k8s_ingress" {
+  type      = "ingress"
+  from_port = 443
+  to_port   = 443
+  protocol  = "tcp"
+  source_security_group_id = aws_security_group.jenkis_ci_sg.id
+  security_group_id = module.eks.cluster_security_group_id
 }

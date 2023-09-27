@@ -20,3 +20,19 @@ output "cluster_name" {
   description = "Kubernetes Cluster Name"
   value       = module.eks.cluster_name
 }
+
+output "cluster_certificate_authority_data" {
+  description = "Kubernetes Certificate"
+  value       = module.eks.cluster_certificate_authority_data
+}
+
+output "jenkins_dns" {
+  description = "Jenkins DNS"
+  value       = aws_instance.jenkins_ci.public_dns
+}
+
+output "devops_service_token" {
+  description = "Service Token"
+  value       = kubernetes_secret.devops_service_secret.data.token
+  sensitive   = true
+}
