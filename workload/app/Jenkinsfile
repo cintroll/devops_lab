@@ -27,7 +27,7 @@ pipeline {
                     def account_id = sh(returnStdout: true, script: 'aws sts get-caller-identity --query "Account" --output text').trim()
                     def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | sed 's/[a-z]\$//' | sed 's/placement:\\ //'").trim()
                     def repository  = "${account_id}.dkr.ecr.${region}.amazonaws.com"
-                    def git_hash = sh(returnStdout: true, script: "git rev-parse --short HEAD")
+                    def git_hash = sh(returnStdout: true, script: "git rev-parse --short HEAD").trim()
                     def image_name = "${repository}/devops_repository/app_python:${git_hash}"
 
                     dir('workload/app') {
