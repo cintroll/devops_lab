@@ -5,10 +5,10 @@ pipeline {
         stage('Docker Login') {
             steps {
                 script {
-                    def account_id = sh(returnStdout: true, script: 'aws sts get-caller-identity --query "Account" --output text | grep -E \'[0-9]+\'')
+                    def account_id = sh(returnStdout: true, script: 'aws sts get-caller-identity --query "Account" --output text').trim()
                     echo "${account_id}"
                     //def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | grep placement")
-                    def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | sed 's/[a-z]\$//' | sed 's/placement:\\ //'")
+                    def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | sed 's/[a-z]\$//' | sed 's/placement:\\ //'").trim()
                     echo "${region}"
                     // def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | sed 's/[a-z]\\$//' | sed 's/placement:\\\ //'")
                     def repository  = "${account_id}.dkr.ecr.${region}.amazonaws.com"
@@ -24,8 +24,8 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
-                    def account_id = sh(returnStdout: true, script: 'aws sts get-caller-identity --query "Account" --output text')
-                    def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | sed 's/[a-z]\$//' | sed 's/placement:\\ //'")
+                    def account_id = sh(returnStdout: true, script: 'aws sts get-caller-identity --query "Account" --output text').trim()
+                    def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | sed 's/[a-z]\$//' | sed 's/placement:\\ //'").trim()
                     def repository  = "${account_id}.dkr.ecr.${region}.amazonaws.com"
                     def git_hash = sh(returnStdout: true, script: "git rev-parse --short HEAD")
                     def image_name = "${repository}/devops_repository/app_python:${git_hash}"
