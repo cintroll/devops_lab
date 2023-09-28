@@ -28,12 +28,12 @@ pipeline {
                     def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | sed 's/[a-z]\$//' | sed 's/placement:\\ //'").trim()
                     def repository  = "${account_id}.dkr.ecr.${region}.amazonaws.com"
                     def git_hash = sh(returnStdout: true, script: "git rev-parse --short HEAD").trim()
-                    def image_name = "${repository}/devops_repository/app_python:${git_hash}"
+                    def image_name = "${repository}/app_python:${git_hash}"
 
                     dir('workload/app') {
                         sh "docker login -u AWS -p \$(aws ecr get-login-password --region ${region}) ${repository}"
-                        sh "docker build . -t devops_repository"
-                        sh "docker tag devops_repository:latest ${repository}/devops_repository/app_python:${git_hash}"
+                        sh "docker build . -t app_python"
+                        sh "docker tag app_python:latest ${repository}/app_python:${git_hash}"
                         sh "docker push '${image_name}'"
                     }
                 }
