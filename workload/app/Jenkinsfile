@@ -32,16 +32,16 @@ pipeline {
                 }
             }
         }
+    }
 
-        post {
-            always {
-                script {
-                    def account_id = sh(returnStdout: true, script: 'aws sts get-caller-identity --query "Account" --output text').trim()
-                    def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | sed 's/[a-z]\$//' | sed 's/placement:\\ //'").trim()
-                    def repository  = "${account_id}.dkr.ecr.${region}.amazonaws.com"
-                    
-                    sh "docker logout ${repository}"
-                }
+    post {
+        always {
+            script {
+                def account_id = sh(returnStdout: true, script: 'aws sts get-caller-identity --query "Account" --output text').trim()
+                def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | sed 's/[a-z]\$//' | sed 's/placement:\\ //'").trim()
+                def repository  = "${account_id}.dkr.ecr.${region}.amazonaws.com"
+                
+                sh "docker logout ${repository}"
             }
         }
     }
