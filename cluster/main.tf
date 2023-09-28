@@ -281,7 +281,7 @@ resource "kubernetes_cluster_role" "devops_cluster_role" {
   }
  
   rule {
-    api_groups = [""]
+    api_groups = ["*"]
     resources  = ["*"]
     verbs      = ["*"]
   }
