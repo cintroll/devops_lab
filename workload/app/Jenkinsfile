@@ -6,22 +6,15 @@ pipeline {
             steps {
                 script {
                     def account_id = sh(returnStdout: true, script: 'aws sts get-caller-identity --query "Account" --output text').trim()
-                    echo "${account_id}"
-                    //def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | grep placement")
                     def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | sed 's/[a-z]\$//' | sed 's/placement:\\ //'").trim()
-                    echo "${region}"
-                    // def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | sed 's/[a-z]\\$//' | sed 's/placement:\\\ //'")
                     def repository  = "${account_id}.dkr.ecr.${region}.amazonaws.com"
-                    echo "${repository}"
 
-                    echo 'Logando no ECR'
                     sh "docker login -u AWS -p \$(aws ecr get-login-password --region ${region}) ${repository}"
                 }
-
             }
         }
 
-        stage('Docker Build') {
+        stage('Docker Build and Push') {
             steps {
                 script {
                     def account_id = sh(returnStdout: true, script: 'aws sts get-caller-identity --query "Account" --output text').trim()
@@ -36,6 +29,18 @@ pipeline {
                         sh "docker tag app_python:latest ${repository}/app_python:${git_hash}"
                         sh "docker push '${image_name}'"
                     }
+                }
+            }
+        }
+
+        post {
+            always {
+                script {
+                    def account_id = sh(returnStdout: true, script: 'aws sts get-caller-identity --query "Account" --output text').trim()
+                    def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | sed 's/[a-z]\$//' | sed 's/placement:\\ //'").trim()
+                    def repository  = "${account_id}.dkr.ecr.${region}.amazonaws.com"
+                    
+                    sh "docker logout ${repository}"
                 }
             }
         }
