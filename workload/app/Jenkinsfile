@@ -1,7 +1,6 @@
 pipeline {
     agent any
     stages {
-
         stage('Docker Login') {
             steps {
                 script {
@@ -32,6 +31,21 @@ pipeline {
                 }
             }
         }
+
+        stage('Manifest Apply') {
+            steps {
+                script {
+                    def account_id = sh(returnStdout: true, script: 'aws sts get-caller-identity --query "Account" --output text').trim()
+                    def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | sed 's/[a-z]\$//' | sed 's/placement:\\ //'").trim()
+                    def repository  = "${account_id}.dkr.ecr.${region}.amazonaws.com"
+                    def git_hash = sh(returnStdout: true, script: "git rev-parse --short HEAD").trim()
+                    def image_name = "${repository}/app_python:${git_hash}"
+
+                    sh "IMAGE_NAME=\"${image_name}\" envsubst < deployment.yaml | kubectl apply -f -"
+                    sh "kubectl get ingress/app_python-ingress -n app_python"
+                }
+            }
+        }
     }
 
     post {
@@ -41,7 +55,7 @@ pipeline {
                 def region = sh(returnStdout: true, script: "ec2-metadata --availability-zone | sed 's/[a-z]\$//' | sed 's/placement:\\ //'").trim()
                 def repository  = "${account_id}.dkr.ecr.${region}.amazonaws.com"
                 
-                sh "docker logout ${repository}"
+                sh "docker logout ${repository}"                
             }
         }
     }
