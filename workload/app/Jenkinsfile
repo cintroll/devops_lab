@@ -41,8 +41,10 @@ pipeline {
                     def git_hash = sh(returnStdout: true, script: "git rev-parse --short HEAD").trim()
                     def image_name = "${repository}/app_python:${git_hash}"
 
-                    sh "IMAGE_NAME=\"${image_name}\" envsubst < deployment.yaml | kubectl apply -f -"
-                    sh "kubectl get ingress/app_python-ingress -n app_python"
+                    dir('workload/app') {
+                        sh "IMAGE_NAME=\"${image_name}\" envsubst < deployment.yaml | kubectl apply -f -"
+                        sh "kubectl get ingress/app_python-ingress -n app_python"
+                    }
                 }
             }
         }
