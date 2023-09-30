@@ -72,8 +72,8 @@ module "eks" {
   }
 
   eks_managed_node_groups = {
-    aza = {
-      name = "node-group-aza"
+    node1 = {
+      name = "node-group-1"
 
       instance_types = ["t3a.small"]
 
@@ -81,16 +81,11 @@ module "eks" {
       max_size     = 2
       desired_size = 1
 
-      availability_zones = data.aws_availability_zones.available.names[0]
-
       capacity_type  = "SPOT"
     }
 
-    azb = {
-      name = "node-group-azb"
-
-      availability_zones = data.aws_availability_zones.available.names[1]
-
+    node2 = {
+      name = "node-group-2"
 
       instance_types = ["t3a.small"]
 
