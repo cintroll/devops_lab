@@ -17,10 +17,12 @@ pipeline {
             steps {
                 script {
                     dir('workload/app') {
-                        sh 'python3 -m venv ./venv'
-                        sh 'source ./venv/bin/activate'
-                        sh 'pip install pytest && pip install -r requirements.txt'
-                        sh 'python3 -m pytest'
+                        sh '''
+                            python3 -m venv ./venv
+                            source ./venv/bin/activate
+                            pip install pytest && pip install -r requirements.txt
+                            python3 -m pytest
+                        '''
                     }
                 }
             }            
