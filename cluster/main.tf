@@ -72,8 +72,8 @@ module "eks" {
   }
 
   eks_managed_node_groups = {
-    one = {
-      name = "node-group-1"
+    aza = {
+      name = "node-group-aza"
 
       instance_types = ["t3a.small"]
 
@@ -81,11 +81,16 @@ module "eks" {
       max_size     = 2
       desired_size = 1
 
+      availability_zones = data.aws_availability_zones.available.names[0]
+
       capacity_type  = "SPOT"
     }
 
-    two = {
-      name = "node-group-1"
+    azb = {
+      name = "node-group-azb"
+
+      availability_zones = data.aws_availability_zones.available.names[1]
+
 
       instance_types = ["t3a.small"]
 
@@ -369,4 +374,11 @@ resource "aws_security_group_rule" "jenkins_k8s_ingress" {
   protocol  = "tcp"
   source_security_group_id = aws_security_group.jenkis_ci_sg.id
   security_group_id = module.eks.cluster_security_group_id
+}
+
+resource "aws_ecr_repository" "app_python_repository" {
+  name = "app_python"
+
+  image_tag_mutability = "MUTABLE"
+
 }
