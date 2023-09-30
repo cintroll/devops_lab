@@ -14,14 +14,16 @@ pipeline {
         }
 
         stage('Test App') {
-            script {
-                dir('workload/app') {
-                    sh 'python -m venv venv'
-                    sh 'source venv/bin/active'
-                    sh 'pip install pytest && pip install -r requirements.txt'
-                    sh 'python -m pytest'
+            steps {
+                script {
+                    dir('workload/app') {
+                        sh 'python -m venv venv'
+                        sh 'source venv/bin/active'
+                        sh 'pip install pytest && pip install -r requirements.txt'
+                        sh 'python -m pytest'
+                    }
                 }
-            }
+            }            
         }
 
         stage('Docker Build and Push') {
