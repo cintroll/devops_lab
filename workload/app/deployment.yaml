@@ -9,6 +9,9 @@ kind: Deployment
 metadata:
   name: app-python
   namespace: app-python
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '5000'
 spec:
   replicas: 2
   selector:
@@ -54,9 +57,6 @@ kind: Service
 metadata:
   namespace: app-python
   name: app-python-service
-  annotations:
-    prometheus.io/scrape: 'true'
-    prometheus.io/port: 5000
 spec:
   type: NodePort
   selector:
