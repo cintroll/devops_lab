@@ -75,7 +75,7 @@ module "eks" {
     node1 = {
       name = "node-group-1"
 
-      instance_types = ["t3a.small"]
+      instance_types = ["t3a.medium"]
 
       min_size     = 1
       max_size     = 2
@@ -87,7 +87,7 @@ module "eks" {
     node2 = {
       name = "node-group-2"
 
-      instance_types = ["t3a.small"]
+      instance_types = ["t3a.medium"]
 
       min_size     = 1
       max_size     = 2
@@ -120,6 +120,17 @@ module "irsa-ebs-csi" {
   provider_url                  = module.eks.oidc_provider
   role_policy_arns              = [data.aws_iam_policy.ebs_csi_policy.arn]
   oidc_fully_qualified_subjects = ["system:serviceaccount:kube-system:ebs-csi-controller-sa"]
+}
+
+resource "aws_eks_addon" "ebs-csi" {
+  cluster_name             = module.eks.cluster_name
+  addon_name               = "aws-ebs-csi-driver"
+  addon_version            = "v1.20.0-eksbuild.1"
+  service_account_role_arn = module.irsa-ebs-csi.iam_role_arn
+  tags = {
+    "eks_addon" = "ebs-csi"
+    "terraform" = "true"
+  }
 }
 
 ################################################################################
@@ -202,6 +213,12 @@ resource "helm_release" "lb" {
     name  = "clusterName"
     value = module.eks.cluster_name
   }
+}
+
+resource "aws_key_pair" "devops_rsa" {
+  key_name = "devops_rsa"
+  
+  public_key = file("${path.module}/devops_rsa.pub")
 }
 
 data "aws_ami" "amzn-linux-2023-ami" {
@@ -327,7 +344,7 @@ resource "aws_instance" "jenkins_ci" {
 
   vpc_security_group_ids = [ aws_security_group.jenkis_ci_sg.id ]
   
-  key_name = "cintrollan"
+  key_name = aws_key_pair.devops_rsa.key_name
 
   tags = {
     Name = "jenkins_ci"
