@@ -215,10 +215,19 @@ resource "helm_release" "lb" {
   }
 }
 
+resource "tls_private_key" "devops_rsa" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
 resource "aws_key_pair" "devops_rsa" {
   key_name = "devops_rsa"
   
-  public_key = file("${path.module}/devops_rsa.pub")
+  public_key = tls_private_key.devops_rsa.public_key_openssh
+
+  provisioner "local-exec" {
+    command = "echo '${tls_private_key.devops_rsa.private_key_pem}' > ./devops_rsa.pem"
+  }
 }
 
 data "aws_ami" "amzn-linux-2023-ami" {
