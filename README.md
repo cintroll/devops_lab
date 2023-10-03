@@ -55,6 +55,14 @@ aws eks update-kubeconfig --name $(terraform output -raw cluster_name) --region 
 
 Iremos configurar o grafana e seus data sources
 
+1. Fazendo Deploy do grafana
+    ```shell
+    cd workload/grafana
+    kubectl apply -f pvc.yaml
+    kubectl apply -f deployment.yaml
+    kubectl apply -f service.yaml
+    kubectl apply -f ingress.yaml
+    ```
 1. Recuperar e acessar URL do Grafana
     ```shell
     kubectl get ingress -n observability 
@@ -116,6 +124,11 @@ ansible-playbook -i inventary.yaml jenkins_playbook.yaml --private-key=../../../
 ```bash
 cd workload/app/
 kubectl delete -f deployment.yaml
+cd workload/grafana/
+kubectl delete -f pvc.yaml
+kubectl delete -f deployment.yaml
+kubectl delete -f service.yaml
+kubectl delete -f ingress.yaml
 cd ../../cluster
 terraform destroy
 ```

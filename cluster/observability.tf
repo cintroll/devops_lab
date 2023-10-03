@@ -15,7 +15,7 @@ resource "helm_release" "promtail" {
     "${file("${path.module}/../workload/promtail/values.yaml")}"
   ]
 
-  depends_on = [ kubernetes_namespace.observability ]
+  depends_on = [ kubernetes_namespace.observability,module.eks ]
 }
 
 resource "helm_release" "loki" {
@@ -28,7 +28,7 @@ resource "helm_release" "loki" {
     "${file("${path.module}/../workload/loki/values.yaml")}"
   ]
 
-  depends_on = [ kubernetes_namespace.observability ]
+  depends_on = [ kubernetes_namespace.observability,module.eks ]
 }
 
 resource "helm_release" "prometheus" {
@@ -37,29 +37,33 @@ resource "helm_release" "prometheus" {
   chart      = "prometheus"
   namespace  = "observability"
 
-  depends_on = [ kubernetes_namespace.observability ]
+  depends_on = [ kubernetes_namespace.observability,module.eks ]
 }
 
-resource "kubernetes_manifest" "grafana_pvc" {
-  manifest = yamldecode(file("${path.module}/../workload/grafana/pvc.yaml"))
+# resource "kubernetes_manifest" "grafana_pvc" {
+#   manifest = yamldecode(file("${path.module}/../workload/grafana/pvc.yaml"))
 
-  depends_on = [ kubernetes_namespace.observability ]
-}
+#   depends_on = [ kubernetes_namespace.observability, module.eks ]
+# }
 
-resource "kubernetes_manifest" "grafana_deployment" {
-  manifest = yamldecode(file("${path.module}/../workload/grafana/deployment.yaml"))
+# resource "kubernetes_manifest" "grafana_deployment" {
+#   manifest = yamldecode(file("${path.module}/../workload/grafana/deployment.yaml"))
 
-  depends_on = [ kubernetes_manifest.grafana_pvc ]
-}
+#   depends_on = [ kubernetes_manifest.grafana_pvc, module.eks ]
+# }
 
-resource "kubernetes_manifest" "grafana_service" {
-  manifest = yamldecode(file("${path.module}/../workload/grafana/service.yaml"))
+# resource "kubernetes_manifest" "grafana_service" {
+#   manifest = yamldecode(file("${path.module}/../workload/grafana/service.yaml"))
 
-  depends_on = [ kubernetes_manifest.grafana_deployment ]
-}
+#   depends_on = [ kubernetes_manifest.grafana_deployment, module.eks ]
+# }
 
-resource "kubernetes_manifest" "grafana_ingress" {
-  manifest = yamldecode(file("${path.module}/../workload/grafana/ingress.yaml"))
+# resource "kubernetes_manifest" "grafana_ingress" {
+#   manifest = yamldecode(file("${path.module}/../workload/grafana/ingress.yaml"))
 
-  depends_on = [ kubernetes_manifest.grafana_service ]
-}
+#   depends_on = [ 
+#     kubernetes_manifest.grafana_service,
+#     helm_release.lb, 
+#     module.eks
+#    ]
+# }
