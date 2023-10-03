@@ -2,7 +2,7 @@
 jenkins:
   hosts:
     jenkins_master:
-      ansible_host: <ec2_dns>
+      ansible_host: ${EC2_DNS}
       ansible_user: ec2-user
 
 ci:
