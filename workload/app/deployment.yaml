@@ -57,6 +57,9 @@ kind: Service
 metadata:
   namespace: app-python
   name: app-python-service
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '5000'
 spec:
   type: NodePort
   selector:
